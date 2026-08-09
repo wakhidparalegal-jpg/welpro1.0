@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full w-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>weldPRO 1.0 - Portal System</title>
+  
+  <!-- Tailwind CSS & FontAwesome CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- PWA & Mobile Meta Tags -->
+  <meta name="theme-color" content="#0b0f19">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brandDark: '#0b0f19',
+            brandCard: '#151b26',
+            neonGreen: '#00ffaa'
+          },
+          fontFamily: {
+            sans: ['Poppins', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background-color: #0b0f19;
+      color: #e2e8f0;
+      font-family: 'Poppins', sans-serif;
+    }
+    .glass-card {
+      background: rgba(21, 27, 38, 0.85);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(0, 255, 170, 0.2);
+    }
+    .neon-text {
+      color: #00ffaa;
+      text-shadow: 0 0 10px rgba(0, 255, 170, 0.5);
+    }
+    .neon-glow {
+      box-shadow: 0 0 20px rgba(0, 255, 170, 0.25);
+    }
+    
+    /* Loading Spinner Animation */
+    @keyframes pulseGlow {
+      0%, 100% { opacity: 0.4; transform: scale(0.98); }
+      50% { opacity: 1; transform: scale(1.02); }
+    }
+    .pulse-glow {
+      animation: pulseGlow 2s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="relative h-full w-full flex flex-col select-none">
+
+  <!-- Splash Screen / Loader Overlay -->
+  <div id="loader-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 bg-[#0b0f19] transition-opacity duration-500">
+    <div class="glass-card p-8 rounded-3xl flex flex-col items-center text-center max-w-sm w-full neon-glow pulse-glow">
+      <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#00ffaa] to-emerald-700 flex items-center justify-center text-slate-950 font-bold text-3xl shadow-xl mb-4">
+        <i class="fa-solid fa-fire-burner"></i>
+      </div>
+      <h1 class="text-xl font-bold text-white tracking-wider flex items-center gap-2 mb-1">
+        weld<span class="neon-text">PRO</span> <span class="text-xs px-2 py-0.5 rounded bg-[#00ffaa]/10 text-[#00ffaa] border border-[#00ffaa]/30">v1.0</span>
+      </h1>
+      <p class="text-xs text-slate-400 mb-6">Laporan Kerja Departemen Produksi Welding</p>
+      
+      <!-- Progress Ring / Spinner -->
+      <div class="flex items-center gap-3 text-xs text-[#00ffaa] font-medium bg-[#00ffaa]/10 px-4 py-2 rounded-xl border border-[#00ffaa]/30">
+        <i class="fa-solid fa-circle-notch fa-spin text-base"></i>
+        <span>Memuat Aplikasi Google Web App...</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Control Bar -->
+  <div class="fixed top-3 right-3 z-40 flex items-center gap-2 opacity-30 hover:opacity-100 transition-opacity duration-300">
+    <button onclick="reloadApp()" title="Refresh Aplikasi" class="p-2.5 rounded-xl glass-card text-xs text-[#00ffaa] hover:bg-[#00ffaa]/20 transition flex items-center justify-center shadow-lg">
+      <i class="fa-solid fa-rotate-right"></i>
+    </button>
+    <button onclick="toggleFullScreen()" title="Full Screen" class="p-2.5 rounded-xl glass-card text-xs text-[#00ffaa] hover:bg-[#00ffaa]/20 transition flex items-center justify-center shadow-lg">
+      <i class="fa-solid fa-expand"></i>
+    </button>
+    <a href="https://script.google.com/macros/s/AKfycbwqGvi9MxxtESbMi0jJHS8kM_SIlgu5NU-fVse2MRsbV5rjnrFvC9S9MFTxO1HX9Odg/exec" target="_blank" title="Buka Tab Baru" class="p-2.5 rounded-xl glass-card text-xs text-[#00ffaa] hover:bg-[#00ffaa]/20 transition flex items-center justify-center shadow-lg">
+      <i class="fa-solid fa-arrow-up-right-from-square"></i>
+    </a>
+  </div>
+
+  <!-- Main Application Frame -->
+  <main class="flex-1 w-full h-full relative overflow-hidden">
+    <iframe 
+      id="app-frame"
+      src="https://script.google.com/macros/s/AKfycbwqGvi9MxxtESbMi0jJHS8kM_SIlgu5NU-fVse2MRsbV5rjnrFvC9S9MFTxO1HX9Odg/exec"
+      class="w-full h-full border-0 absolute inset-0"
+      allow="geolocation; microphone; camera; clipboard-write;"
+      onload="hideLoader()"
+    ></iframe>
+  </main>
+
+  <script>
+    var loaderHidden = false;
+
+    function hideLoader() {
+      if (loaderHidden) return;
+      loaderHidden = true;
+      var loader = document.getElementById('loader-screen');
+      if (loader) {
+        loader.classList.add('opacity-0');
+        setTimeout(function() {
+          loader.style.display = 'none';
+        }, 500);
+      }
+    }
+
+    // Safety Timeout: Sembunyikan loader otomatis setelah 4 detik jika event onload terhambat
+    setTimeout(function() {
+      hideLoader();
+    }, 4000);
+
+    function reloadApp() {
+      var iframe = document.getElementById('app-frame');
+      var loader = document.getElementById('loader-screen');
+      if (loader) {
+        loader.style.display = 'flex';
+        loader.classList.remove('opacity-0');
+      }
+      loaderHidden = false;
+      if (iframe) {
+        iframe.src = iframe.src;
+      }
+      setTimeout(function() {
+        hideLoader();
+      }, 3000);
+    }
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(function(err) {
+          console.log("Fullscreen request failed: " + err.message);
+        });
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+  </script>
+</body>
+</html>
