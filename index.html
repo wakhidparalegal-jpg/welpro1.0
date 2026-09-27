@@ -1,167 +1,469 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full w-full">
+<html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>weldPRO 1.0 - Portal System</title>
-  
-  <!-- Tailwind CSS & FontAwesome CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- PWA & Mobile Meta Tags -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#0b0f19">
+  <meta name="description" content="Web App Wrapper by Zettbos Engine">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brandDark: '#0b0f19',
-            brandCard: '#151b26',
-            neonGreen: '#00ffaa'
-          },
-          fontFamily: {
-            sans: ['Poppins', 'sans-serif']
-          }
-        }
-      }
-    }
-  </script>
-
+  <title>Zettbos Web App Portal</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
   <style>
+    :root {
+      --bg-base: #0b0f19;
+      --bg-surface: #151b26;
+      --bg-glass: rgba(21, 27, 38, 0.75);
+      --accent-neon: #00ffaa;
+      --accent-neon-glow: rgba(0, 255, 170, 0.35);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --border-glass: rgba(0, 255, 170, 0.15);
+      --radius-sm: 8px;
+      --radius-md: 14px;
+      --radius-full: 9999px;
+      --transition-fast: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-smooth: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
       -webkit-tap-highlight-color: transparent;
     }
-    html, body {
+
+    body, html {
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #0b0f19;
-      color: #e2e8f0;
-      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
     }
-    .glass-card {
-      background: rgba(21, 27, 38, 0.85);
+
+    #app-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background-color: var(--bg-base);
+    }
+
+    #web-app-frame {
+      width: 100%;
+      height: 100%;
+      border: none;
+      flex: 1;
+      opacity: 0;
+      transform: scale(0.995);
+      transition: opacity var(--transition-smooth), transform var(--transition-smooth);
+      background-color: transparent;
+    }
+
+    #web-app-frame.is-loaded {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .screen-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, #151b26 0%, #0b0f19 100%);
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .screen-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .loader-ring {
+      position: relative;
+      width: 64px;
+      height: 64px;
+      margin-bottom: 24px;
+    }
+
+    .loader-ring::before,
+    .loader-ring::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 3px solid transparent;
+    }
+
+    .loader-ring::before {
+      border-top-color: var(--accent-neon);
+      animation: spin 1s cubic-bezier(0.55, 0.055, 0.675, 0.19) infinite;
+      box-shadow: 0 0 16px var(--accent-neon-glow);
+    }
+
+    .loader-ring::after {
+      border-bottom-color: rgba(0, 255, 170, 0.4);
+      animation: spin 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite reverse;
+    }
+
+    @keyframes spin {
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .overlay-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      color: var(--text-main);
+      margin-bottom: 8px;
+    }
+
+    .overlay-subtitle {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      max-width: 320px;
+      line-height: 1.5;
+    }
+
+    .floating-bar {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      background: var(--bg-glass);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(0, 255, 170, 0.2);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-full);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 0 12px rgba(0, 255, 170, 0.1);
+      transition: transform var(--transition-fast), opacity var(--transition-fast);
     }
-    .neon-text {
-      color: #00ffaa;
-      text-shadow: 0 0 10px rgba(0, 255, 170, 0.5);
+
+    .btn-action {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      width: 36px;
+      height: 36px;
+      border-radius: var(--radius-full);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all var(--transition-fast);
+      outline: none;
     }
-    .neon-glow {
-      box-shadow: 0 0 20px rgba(0, 255, 170, 0.25);
+
+    .btn-action:hover {
+      background: rgba(0, 255, 170, 0.15);
+      border-color: var(--accent-neon);
+      color: var(--accent-neon);
+      transform: translateY(-2px);
     }
-    
-    /* Loading Spinner Animation */
-    @keyframes pulseGlow {
-      0%, 100% { opacity: 0.4; transform: scale(0.98); }
-      50% { opacity: 1; transform: scale(1.02); }
+
+    .btn-action:active {
+      transform: scale(0.95);
     }
-    .pulse-glow {
-      animation: pulseGlow 2s infinite ease-in-out;
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--accent-neon);
+      box-shadow: 0 0 8px var(--accent-neon);
+      margin: 0 4px;
+      transition: background-color var(--transition-fast), box-shadow var(--transition-fast);
+    }
+
+    .status-dot.offline {
+      background-color: var(--danger);
+      box-shadow: 0 0 8px var(--danger);
+    }
+
+    .toast-container {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 100;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .custom-toast {
+      pointer-events: auto;
+      min-width: 260px;
+      padding: 12px 18px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-glass);
+      color: var(--text-main);
+      border-radius: var(--radius-md);
+      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(-12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .btn-brand {
+      background: var(--accent-neon);
+      color: #04100c;
+      font-weight: 700;
+      font-size: 0.875rem;
+      padding: 10px 20px;
+      border-radius: var(--radius-md);
+      border: none;
+      cursor: pointer;
+      margin-top: 18px;
+      transition: all var(--transition-fast);
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-brand:hover {
+      box-shadow: 0 0 18px var(--accent-neon-glow);
+      transform: translateY(-2px);
     }
   </style>
 </head>
-<body class="relative h-full w-full flex flex-col select-none">
+<body>
 
-  <!-- Splash Screen / Loader Overlay -->
-  <div id="loader-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center p-4 bg-[#0b0f19] transition-opacity duration-500">
-    <div class="glass-card p-8 rounded-3xl flex flex-col items-center text-center max-w-sm w-full neon-glow pulse-glow">
-      <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#00ffaa] to-emerald-700 flex items-center justify-center text-slate-950 font-bold text-3xl shadow-xl mb-4">
-        <i class="fa-solid fa-fire-burner"></i>
-      </div>
-      <h1 class="text-xl font-bold text-white tracking-wider flex items-center gap-2 mb-1">
-        weld<span class="neon-text">PRO</span> <span class="text-xs px-2 py-0.5 rounded bg-[#00ffaa]/10 text-[#00ffaa] border border-[#00ffaa]/30">v1.0</span>
-      </h1>
-      <p class="text-xs text-slate-400 mb-6">Laporan Kerja Departemen Produksi Welding</p>
-      
-      <!-- Progress Ring / Spinner -->
-      <div class="flex items-center gap-3 text-xs text-[#00ffaa] font-medium bg-[#00ffaa]/10 px-4 py-2 rounded-xl border border-[#00ffaa]/30">
-        <i class="fa-solid fa-circle-notch fa-spin text-base"></i>
-        <span>Memuat Aplikasi Google Web App...</span>
+  <div id="app-container">
+    <!-- Overlay Loading Screen -->
+    <div id="loading-screen" class="screen-overlay">
+      <div class="loader-ring"></div>
+      <h2 class="overlay-title">Memuat Antarmuka</h2>
+      <p class="overlay-subtitle">Menghubungkan ke Zettbos Apps Script Engine...</p>
+    </div>
+
+    <!-- Overlay Error/Timeout Screen -->
+    <div id="error-screen" class="screen-overlay hidden">
+      <div style="font-size: 2.5rem; margin-bottom: 12px;">⚠️</div>
+      <h2 class="overlay-title">Gagal Memuat Aplikasi</h2>
+      <p class="overlay-subtitle">
+        Koneksi membutuhkan waktu terlalu lama atau izin iframe dibatasi oleh server Google Apps Script.
+      </p>
+      <div style="display: flex; gap: 12px; margin-top: 14px;">
+        <button class="btn-brand" onclick="reloadFrame()">Coba Lagi</button>
+        <a id="btn-direct-link" href="#" target="_blank" class="btn-brand" style="background: rgba(255,255,255,0.1); color: var(--text-main);">
+          Buka Langsung ↗
+        </a>
       </div>
     </div>
-  </div>
 
-  <!-- Floating Control Bar -->
-  <div class="fixed top-3 right-3 z-40 flex items-center gap-2 opacity-30 hover:opacity-100 transition-opacity duration-300">
-    <button onclick="reloadApp()" title="Refresh Aplikasi" class="p-2.5 rounded-xl glass-card text-xs text-[#00ffaa] hover:bg-[#00ffaa]/20 transition flex items-center justify-center shadow-lg">
-      <i class="fa-solid fa-rotate-right"></i>
-    </button>
-    <button onclick="toggleFullScreen()" title="Full Screen" class="p-2.5 rounded-xl glass-card text-xs text-[#00ffaa] hover:bg-[#00ffaa]/20 transition flex items-center justify-center shadow-lg">
-      <i class="fa-solid fa-expand"></i>
-    </button>
-    <a href="https://script.google.com/macros/s/AKfycbwqGvi9MxxtESbMi0jJHS8kM_SIlgu5NU-fVse2MRsbV5rjnrFvC9S9MFTxO1HX9Odg/exec" target="_blank" title="Buka Tab Baru" class="p-2.5 rounded-xl glass-card text-xs text-[#00ffaa] hover:bg-[#00ffaa]/20 transition flex items-center justify-center shadow-lg">
-      <i class="fa-solid fa-arrow-up-right-from-square"></i>
-    </a>
-  </div>
+    <!-- Web App Iframe -->
+    <iframe
+      id="web-app-frame"
+      src="about:blank"
+      allow="camera; microphone; geolocation; clipboard-read; clipboard-write; fullscreen"
+      sandbox="allow-forms allow-scripts allow-same-origin allow-popups allow-modals allow-downloads"
+      title="Zettbos Embedded Web App">
+    </iframe>
 
-  <!-- Main Application Frame -->
-  <main class="flex-1 w-full h-full relative overflow-hidden">
-    <iframe 
-      id="app-frame"
-      src="https://script.google.com/macros/s/AKfycbwqGvi9MxxtESbMi0jJHS8kM_SIlgu5NU-fVse2MRsbV5rjnrFvC9S9MFTxO1HX9Odg/exec"
-      class="w-full h-full border-0 absolute inset-0"
-      allow="geolocation; microphone; camera; clipboard-write;"
-      onload="hideLoader()"
-    ></iframe>
-  </main>
+    <!-- Floating Glassmorphic Utility Controls -->
+    <aside class="floating-bar" aria-label="Aksi Cepat">
+      <div id="status-indicator" class="status-dot" title="Status Jaringan: Online"></div>
+      
+      <button class="btn-action" onclick="reloadFrame()" title="Segarkan Web App" aria-label="Refresh">
+        🔄
+      </button>
+      
+      <button class="btn-action" onclick="toggleFullScreen()" title="Mode Layar Penuh" aria-label="Fullscreen">
+        ⛶
+      </button>
+
+      <button class="btn-action" onclick="openDirectApp()" title="Buka Tab Baru" aria-label="Open in tab">
+        ↗
+      </button>
+    </aside>
+
+    <!-- Custom Toast Container -->
+    <div id="toast-container" class="toast-container" aria-live="polite"></div>
+  </div>
 
   <script>
-    var loaderHidden = false;
+    // URL Google Apps Script Target
+    var TARGET_URL = 'https://script.google.com/macros/s/AKfycbzc-ChY_JxJizpjYas4eQkkOw7VXrPAtbDzMWCOWzQx-lrJ8XQjMSWZccYG76IBvi-Yew/exec';
 
-    function hideLoader() {
-      if (loaderHidden) return;
-      loaderHidden = true;
-      var loader = document.getElementById('loader-screen');
-      if (loader) {
-        loader.classList.add('opacity-0');
-        setTimeout(function() {
-          loader.style.display = 'none';
-        }, 500);
+    // Elemen DOM
+    var iframe = document.getElementById('web-app-frame');
+    var loadingScreen = document.getElementById('loading-screen');
+    var errorScreen = document.getElementById('error-screen');
+    var directLinkBtn = document.getElementById('btn-direct-link');
+    var statusDot = document.getElementById('status-indicator');
+    var toastContainer = document.getElementById('toast-container');
+
+    var loadTimer = null;
+    var LOAD_TIMEOUT_MS = 20000; // 20 detik batas timeout
+
+    // Konfigurasi link direct
+    directLinkBtn.href = TARGET_URL;
+
+    function initAppWrapper() {
+      showLoading(true);
+      errorScreen.classList.add('hidden');
+      
+      // Pasang timeout pencegah hanging bila iframe diblokir browser/Google
+      if (loadTimer) {
+        clearTimeout(loadTimer);
+      }
+      
+      loadTimer = setTimeout(function() {
+        if (!iframe.classList.contains('is-loaded')) {
+          showLoading(false);
+          errorScreen.classList.remove('hidden');
+          showToast('Waktu respon melebihi batas. Periksa koneksi atau mode X-Frame.', 'warning');
+        }
+      }, LOAD_TIMEOUT_MS);
+
+      // Mulai muat URL
+      iframe.src = TARGET_URL;
+    }
+
+    iframe.onload = function() {
+      if (loadTimer) {
+        clearTimeout(loadTimer);
+      }
+      // Beri sedikit jeda transisi render
+      setTimeout(function() {
+        showLoading(false);
+        iframe.classList.add('is-loaded');
+        showToast('Aplikasi siap digunakan.', 'success');
+      }, 500);
+    };
+
+    function showLoading(isVisible) {
+      if (isVisible) {
+        loadingScreen.classList.remove('hidden');
+      } else {
+        loadingScreen.classList.add('hidden');
       }
     }
 
-    // Safety Timeout: Sembunyikan loader otomatis setelah 4 detik jika event onload terhambat
-    setTimeout(function() {
-      hideLoader();
-    }, 4000);
+    function reloadFrame() {
+      iframe.classList.remove('is-loaded');
+      showLoading(true);
+      errorScreen.classList.add('hidden');
+      showToast('Memuat ulang antarmuka...', 'info');
 
-    function reloadApp() {
-      var iframe = document.getElementById('app-frame');
-      var loader = document.getElementById('loader-screen');
-      if (loader) {
-        loader.style.display = 'flex';
-        loader.classList.remove('opacity-0');
+      try {
+        iframe.contentWindow.location.reload();
+      } catch (err) {
+        // Fallback jika diblokir oleh Cross-Origin Restriction
+        iframe.src = TARGET_URL;
       }
-      loaderHidden = false;
-      if (iframe) {
-        iframe.src = iframe.src;
+
+      if (loadTimer) {
+        clearTimeout(loadTimer);
       }
-      setTimeout(function() {
-        hideLoader();
-      }, 3000);
+      
+      loadTimer = setTimeout(function() {
+        if (!iframe.classList.contains('is-loaded')) {
+          showLoading(false);
+          errorScreen.classList.remove('hidden');
+        }
+      }, LOAD_TIMEOUT_MS);
     }
 
     function toggleFullScreen() {
       if (!document.fullscreenElement) {
         document.documentElement.requestFullscreen().catch(function(err) {
-          console.log("Fullscreen request failed: " + err.message);
+          showToast('Layar penuh tidak didukung di perangkat ini', 'warning');
         });
       } else {
         if (document.exitFullscreen) {
           document.exitFullscreen();
         }
       }
+    }
+
+    function openDirectApp() {
+      window.open(TARGET_URL, '_blank');
+    }
+
+    function showToast(message, type) {
+      var toast = document.createElement('div');
+      toast.className = 'custom-toast';
+      
+      var icon = '✨';
+      if (type === 'warning') {
+        icon = '⚠️';
+      } else if (type === 'danger') {
+        icon = '❌';
+      } else if (type === 'info') {
+        icon = 'ℹ️';
+      }
+      
+      toast.innerHTML = '<span>' + icon + '</span><span>' + message + '</span>';
+      toastContainer.appendChild(toast);
+
+      setTimeout(function() {
+        toast.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-10px)';
+        setTimeout(function() {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+          }
+        }, 300);
+      }, 3500);
+    }
+
+    // Monitoring koneksi offline & online
+    window.addEventListener('online', function() {
+      statusDot.classList.remove('offline');
+      statusDot.title = 'Status Jaringan: Online';
+      showToast('Koneksi internet terhubung kembali', 'success');
+    });
+
+    window.addEventListener('offline', function() {
+      statusDot.classList.add('offline');
+      statusDot.title = 'Status Jaringan: Offline';
+      showToast('Koneksi internet terputus!', 'danger');
+    });
+
+    // Safe Canvas Execution Guard
+    if (typeof google === 'undefined') {
+      // Standalone Browser or Gemini Preview Mode
+      window.addEventListener('DOMContentLoaded', initAppWrapper);
+    } else {
+      window.addEventListener('load', initAppWrapper);
     }
   </script>
 </body>
